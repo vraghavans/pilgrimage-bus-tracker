@@ -5,6 +5,7 @@ import { BusDetails } from "@/components/BusDetails";
 import { Bus } from "@/types/bus";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import Map from "@/components/Map";
 
 const Index = () => {
   const [selectedBus, setSelectedBus] = useState<Bus | null>(null);
@@ -73,12 +74,11 @@ const Index = () => {
         selectedBusId={selectedBus?.id}
       />
       <div className="flex-1 relative">
-        <div className="absolute inset-0 bg-sage-100/30">
-          {/* Map will be added in future iterations */}
-          <div className="h-full flex items-center justify-center text-sage-500">
-            Map view coming soon...
-          </div>
-        </div>
+        <Map 
+          buses={buses}
+          selectedBus={selectedBus}
+          onBusSelect={setSelectedBus}
+        />
         {selectedBus && <BusDetails bus={selectedBus} />}
       </div>
     </div>
