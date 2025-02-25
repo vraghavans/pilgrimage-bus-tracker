@@ -4,6 +4,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Bus } from '@/types/bus';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MapProps {
   buses: Bus[];
@@ -18,39 +19,41 @@ const Map = ({ buses, selectedBus, onBusSelect }: MapProps) => {
   const [mapError, setMapError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    async function initializeMap() {
+      if (!mapContainer.current) return;
 
-    const token = import.meta.env.VITE_MAPBOX_TOKEN;
-    
-    if (!token) {
-      const errorMessage = "Mapbox token is missing. Please add it to your Supabase Edge Function Secrets.";
-      setMapError(errorMessage);
-      toast.error(errorMessage);
-      return;
+      try {
+        // Get Mapbox token from Supabase
+        const { data: { MAPBOX_PUBLIC_TOKEN }, error } = await supabase.functions.invoke('get-mapbox-token');
+        
+        if (error || !MAPBOX_PUBLIC_TOKEN) {
+          throw new Error('Failed to get Mapbox token');
+        }
+
+        // Initialize map
+        mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
+        
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: [0, 0],
+          zoom: 2
+        });
+
+        // Add navigation controls
+        map.current.addControl(
+          new mapboxgl.NavigationControl(),
+          'top-right'
+        );
+      } catch (error) {
+        const errorMessage = "Failed to initialize map. Please check your Mapbox token.";
+        setMapError(errorMessage);
+        toast.error(errorMessage);
+        console.error('Map initialization error:', error);
+      }
     }
 
-    try {
-      // Initialize map
-      mapboxgl.accessToken = token;
-      
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [0, 0],
-        zoom: 2
-      });
-
-      // Add navigation controls
-      map.current.addControl(
-        new mapboxgl.NavigationControl(),
-        'top-right'
-      );
-    } catch (error) {
-      const errorMessage = "Failed to initialize map. Please check your Mapbox token.";
-      setMapError(errorMessage);
-      toast.error(errorMessage);
-      console.error('Map initialization error:', error);
-    }
+    initializeMap();
 
     return () => {
       map.current?.remove();
