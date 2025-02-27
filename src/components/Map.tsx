@@ -23,15 +23,23 @@ const Map = ({ buses, selectedBus, onBusSelect }: MapProps) => {
       if (!mapContainer.current) return;
 
       try {
-        // Get Mapbox token from Supabase
-        const { data: { MAPBOX_PUBLIC_TOKEN }, error } = await supabase.functions.invoke('get-mapbox-token');
+        console.log('Fetching Mapbox token...');
+        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         
-        if (error || !MAPBOX_PUBLIC_TOKEN) {
-          throw new Error('Failed to get Mapbox token');
+        if (error) {
+          console.error('Error fetching Mapbox token:', error);
+          throw new Error('Failed to fetch Mapbox token');
         }
 
+        if (!data?.MAPBOX_PUBLIC_TOKEN) {
+          console.error('No Mapbox token in response:', data);
+          throw new Error('No Mapbox token received');
+        }
+
+        console.log('Successfully received Mapbox token');
+        
         // Initialize map
-        mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
+        mapboxgl.accessToken = data.MAPBOX_PUBLIC_TOKEN;
         
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
