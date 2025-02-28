@@ -117,9 +117,7 @@ const DriverApp = () => {
         longitude: newLng
       });
       
-      // Turn off RLS temporarily for this operation
-      // This is only recommended for development and testing
-      // For production, proper authentication should be implemented
+      // Try standard upsert first
       const { data, error } = await supabase
         .from('bus_locations')
         .upsert({
@@ -135,10 +133,16 @@ const DriverApp = () => {
       if (error) {
         console.error('Error updating location:', error);
         
-        // Fallback method: Try direct insert with specific columns
-        // This is a workaround for RLS issues during development
+        // Fallback method: Use the RPC function we created to bypass RLS
+        type UpdateBusLocationParams = {
+          p_bus_id: string;
+          p_latitude: number;
+          p_longitude: number;
+          p_status: string;
+        };
+        
         const { error: insertError } = await supabase
-          .rpc('update_bus_location', {
+          .rpc<void, UpdateBusLocationParams>('update_bus_location', {
             p_bus_id: driverBus.id,
             p_latitude: newLat,
             p_longitude: newLng,

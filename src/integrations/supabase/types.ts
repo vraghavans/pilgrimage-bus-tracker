@@ -47,7 +47,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_bus_location: {
+        Args: {
+          p_bus_id: string
+          p_latitude: number
+          p_longitude: number
+          p_status?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
