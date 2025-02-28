@@ -134,15 +134,8 @@ const DriverApp = () => {
         console.error('Error updating location:', error);
         
         // Fallback method: Use the RPC function we created to bypass RLS
-        type UpdateBusLocationParams = {
-          p_bus_id: string;
-          p_latitude: number;
-          p_longitude: number;
-          p_status: string;
-        };
-        
         const { error: insertError } = await supabase
-          .rpc<void, UpdateBusLocationParams>('update_bus_location', {
+          .rpc('update_bus_location', {
             p_bus_id: driverBus.id,
             p_latitude: newLat,
             p_longitude: newLng,
