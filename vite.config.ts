@@ -6,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? './' : '/',  // Add this line for GitHub Pages compatibility
+  base: mode === 'production' ? '/pilgrimage-bus-tracker/' : '/',  // Updated for your repository name
   server: {
     host: "::",
     port: 8080,

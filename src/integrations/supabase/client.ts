@@ -10,7 +10,7 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 const isDevelopment = import.meta.env.DEV;
 const siteUrl = isDevelopment 
   ? window.location.origin
-  : 'https://yourusername.github.io/your-repo-name'; // Replace with your actual GitHub Pages URL
+  : 'https://vraghavans.github.io/pilgrimage-bus-tracker'; // Your GitHub Pages URL
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
