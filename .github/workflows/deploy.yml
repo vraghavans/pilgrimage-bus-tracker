@@ -32,6 +32,11 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+        env:
+          # Pass environment variables needed for build
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://yzxgsfvchitaariayuas.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6eGdzZnZjaGl0YWFyaWF5dWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyOTA3MDEsImV4cCI6MjA1NTg2NjcwMX0.BvhHxyeqH2CCmghavjgS6bSXqHnSII6i__09154-pFg' }}
+          BASE_PATH: "/pilgrimage-bus-tracker"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
