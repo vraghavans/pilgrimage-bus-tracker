@@ -24,23 +24,39 @@ const DriverApp = () => {
   const [locationPermission, setLocationPermission] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState(driverBus.location);
   const [lastUpdateTime, setLastUpdateTime] = useState(driverBus.lastUpdate);
+  const [error, setError] = useState<string | null>(null);
 
   // Check for location permission on component mount
   useEffect(() => {
-    checkLocationPermission();
+    try {
+      checkLocationPermission();
+      // Initial message to show the component is loading
+      console.log("DriverApp component mounted");
+    } catch (err) {
+      console.error("Error in initial loading:", err);
+      setError("Failed to initialize the driver app");
+      toast.error("Failed to initialize the driver app");
+    }
   }, []);
 
   // Function to check location permission
   const checkLocationPermission = async () => {
     try {
-      const permission = await navigator.permissions.query({ name: 'geolocation' });
+      if (!navigator.geolocation) {
+        throw new Error('Geolocation is not supported by your browser');
+      }
+      
+      const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
       setLocationPermission(permission.state);
       
       permission.addEventListener('change', () => {
         setLocationPermission(permission.state);
       });
+      
+      console.log("Location permission:", permission.state);
     } catch (error) {
       console.error('Error checking location permission:', error);
+      setError('Could not check location permission');
       toast.error('Could not check location permission');
     }
   };
@@ -54,7 +70,11 @@ const DriverApp = () => {
 
       // Request permission if needed
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
       });
 
       setIsTracking(true);
@@ -63,13 +83,14 @@ const DriverApp = () => {
       toast.success('Location tracking started');
     } catch (error) {
       console.error('Error starting location tracking:', error);
+      setError('Could not start location tracking');
       toast.error('Could not start location tracking');
     }
   };
 
   // Function to stop tracking
   const stopTracking = () => {
-    if (navigator.geolocation) {
+    if (navigator.geolocation && watchId.current) {
       navigator.geolocation.clearWatch(watchId.current);
       setIsTracking(false);
       toast.success('Location tracking stopped');
@@ -86,6 +107,7 @@ const DriverApp = () => {
         updateLocation,
         (error) => {
           console.error('Error watching location:', error);
+          setError('Error updating location');
           toast.error('Error updating location');
         },
         {
@@ -149,9 +171,32 @@ const DriverApp = () => {
       }
     } catch (error) {
       console.error('Error updating location:', error);
+      setError('Failed to update location');
       toast.error('Failed to update location');
     }
   };
+
+  // Show error message if there's an error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <Card className="max-w-md mx-auto shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-red-500">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{error}</p>
+            <Button 
+              className="mt-4" 
+              onClick={() => window.location.reload()}
+            >
+              Reload App
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-4">
