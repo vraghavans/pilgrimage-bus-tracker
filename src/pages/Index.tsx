@@ -6,10 +6,14 @@ import { Bus } from "@/types/bus";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Map from "@/components/Map";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [selectedBus, setSelectedBus] = useState<Bus | null>(null);
   const [buses, setBuses] = useState<Bus[]>([]);
+  const { signOut } = useAuth();
 
   // Fetch initial bus locations
   useEffect(() => {
@@ -67,19 +71,28 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-sage-50">
-      <BusList
-        buses={buses}
-        onSelectBus={setSelectedBus}
-        selectedBusId={selectedBus?.id}
-      />
-      <div className="flex-1 relative">
-        <Map 
+    <div className="flex flex-col min-h-screen bg-sage-50">
+      <header className="bg-white p-4 shadow-sm flex justify-between items-center">
+        <h1 className="text-xl font-bold">Pilgrimage Bus Tracker - Admin</h1>
+        <Button variant="outline" size="sm" onClick={signOut}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
+      </header>
+      <div className="flex flex-1">
+        <BusList
           buses={buses}
-          selectedBus={selectedBus}
-          onBusSelect={setSelectedBus}
+          onSelectBus={setSelectedBus}
+          selectedBusId={selectedBus?.id}
         />
-        {selectedBus && <BusDetails bus={selectedBus} />}
+        <div className="flex-1 relative">
+          <Map 
+            buses={buses}
+            selectedBus={selectedBus}
+            onBusSelect={setSelectedBus}
+          />
+          {selectedBus && <BusDetails bus={selectedBus} />}
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import DriverApp from "./pages/DriverApp";
+import Auth from "./pages/Auth";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -19,12 +22,25 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter basename={basePath}>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/driver" element={<DriverApp />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            {/* Public route */}
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* Protected admin route */}
+            <Route element={<ProtectedRoute requiredRole="admin" />}>
+              <Route path="/" element={<Index />} />
+            </Route>
+            
+            {/* Protected driver route */}
+            <Route element={<ProtectedRoute requiredRole="driver" />}>
+              <Route path="/driver" element={<DriverApp />} />
+            </Route>
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

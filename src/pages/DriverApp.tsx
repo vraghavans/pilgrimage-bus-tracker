@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Bus } from "@/types/bus";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { LogOut } from "lucide-react";
 
 const DriverApp = () => {
+  const { signOut, session } = useAuth();
   const [driverBus] = useState<Bus>({
-    id: "1",
-    name: "Bus 101",
-    driverName: "John Doe",
+    id: session?.user?.id || "1",
+    name: `Bus ${session?.user?.id?.substring(0, 4) || "101"}`,
+    driverName: session?.user?.email?.split('@')[0] || "John Doe",
     status: "active",
     location: {
       latitude: 51.5074,
@@ -26,11 +28,9 @@ const DriverApp = () => {
   const [lastUpdateTime, setLastUpdateTime] = useState(driverBus.lastUpdate);
   const [error, setError] = useState<string | null>(null);
 
-  // Check for location permission on component mount
   useEffect(() => {
     try {
       checkLocationPermission();
-      // Initial message to show the component is loading
       console.log("DriverApp component mounted");
     } catch (err) {
       console.error("Error in initial loading:", err);
@@ -39,7 +39,6 @@ const DriverApp = () => {
     }
   }, []);
 
-  // Function to check location permission
   const checkLocationPermission = async () => {
     try {
       if (!navigator.geolocation) {
@@ -61,14 +60,12 @@ const DriverApp = () => {
     }
   };
 
-  // Function to request location permission and start tracking
   const startTracking = async () => {
     try {
       if (!navigator.geolocation) {
         throw new Error('Geolocation is not supported by your browser');
       }
 
-      // Request permission if needed
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
@@ -88,7 +85,6 @@ const DriverApp = () => {
     }
   };
 
-  // Function to stop tracking
   const stopTracking = () => {
     if (navigator.geolocation && watchId.current) {
       navigator.geolocation.clearWatch(watchId.current);
@@ -97,10 +93,8 @@ const DriverApp = () => {
     }
   };
 
-  // Reference to store the watchPosition ID
   const watchId = React.useRef<number>();
 
-  // Function to start watching location
   const startWatchingLocation = () => {
     if (navigator.geolocation) {
       watchId.current = navigator.geolocation.watchPosition(
@@ -119,14 +113,12 @@ const DriverApp = () => {
     }
   };
 
-  // Function to update location in Supabase
   const updateLocation = async (position: GeolocationPosition) => {
     try {
       const newLat = position.coords.latitude;
       const newLng = position.coords.longitude;
       const timestamp = new Date().toISOString();
       
-      // Update local state first
       setCurrentLocation({
         latitude: newLat,
         longitude: newLng
@@ -139,7 +131,6 @@ const DriverApp = () => {
         longitude: newLng
       });
       
-      // Try standard upsert first
       const { data, error } = await supabase
         .from('bus_locations')
         .upsert({
@@ -155,7 +146,6 @@ const DriverApp = () => {
       if (error) {
         console.error('Error updating location:', error);
         
-        // Fallback method: Use the RPC function we created to bypass RLS
         const { error: insertError } = await supabase
           .rpc('update_bus_location', {
             p_bus_id: driverBus.id,
@@ -176,7 +166,6 @@ const DriverApp = () => {
     }
   };
 
-  // Show error message if there's an error
   if (error) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
@@ -200,6 +189,13 @@ const DriverApp = () => {
 
   return (
     <div className="min-h-screen bg-background p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-bold">Driver App</h1>
+        <Button variant="outline" size="sm" onClick={signOut}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
       <Card className="max-w-md mx-auto shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
