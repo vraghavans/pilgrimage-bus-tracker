@@ -10,12 +10,15 @@ import DriverApp from "./pages/DriverApp";
 
 const queryClient = new QueryClient();
 
+// Define the base path based on environment
+const basePath = import.meta.env.PROD ? '/pilgrimage-bus-tracker' : '';
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename={basePath}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/driver" element={<DriverApp />} />
