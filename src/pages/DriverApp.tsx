@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DriverApp = () => {
   const { signOut, session } = useAuth();
@@ -27,6 +28,10 @@ const DriverApp = () => {
   const [currentLocation, setCurrentLocation] = useState(driverBus.location);
   const [lastUpdateTime, setLastUpdateTime] = useState(driverBus.lastUpdate);
   const [error, setError] = useState<string | null>(null);
+  const [updateInterval, setUpdateInterval] = useState<number>(30); // Default 30 seconds
+  
+  const intervalRef = useRef<number>();
+  const watchId = useRef<number>();
 
   useEffect(() => {
     try {
@@ -37,6 +42,16 @@ const DriverApp = () => {
       setError("Failed to initialize the driver app");
       toast.error("Failed to initialize the driver app");
     }
+
+    return () => {
+      // Clean up interval and location watching when component unmounts
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (watchId.current) {
+        navigator.geolocation.clearWatch(watchId.current);
+      }
+    };
   }, []);
 
   const checkLocationPermission = async () => {
@@ -76,8 +91,31 @@ const DriverApp = () => {
 
       setIsTracking(true);
       updateLocation(position);
-      startWatchingLocation();
-      toast.success('Location tracking started');
+      
+      // Instead of continuous watching, set up an interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      
+      // Convert seconds to milliseconds for the interval
+      const intervalTime = updateInterval * 1000;
+      
+      intervalRef.current = window.setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+          updateLocation,
+          (error) => {
+            console.error('Error getting location:', error);
+            toast.error('Error updating location');
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
+      }, intervalTime);
+      
+      toast.success(`Location tracking started - updates every ${updateInterval} seconds`);
     } catch (error) {
       console.error('Error starting location tracking:', error);
       setError('Could not start location tracking');
@@ -86,31 +124,18 @@ const DriverApp = () => {
   };
 
   const stopTracking = () => {
-    if (navigator.geolocation && watchId.current) {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = undefined;
+    }
+    
+    if (watchId.current) {
       navigator.geolocation.clearWatch(watchId.current);
-      setIsTracking(false);
-      toast.success('Location tracking stopped');
+      watchId.current = undefined;
     }
-  };
-
-  const watchId = React.useRef<number>();
-
-  const startWatchingLocation = () => {
-    if (navigator.geolocation) {
-      watchId.current = navigator.geolocation.watchPosition(
-        updateLocation,
-        (error) => {
-          console.error('Error watching location:', error);
-          setError('Error updating location');
-          toast.error('Error updating location');
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        }
-      );
-    }
+    
+    setIsTracking(false);
+    toast.success('Location tracking stopped');
   };
 
   const updateLocation = async (position: GeolocationPosition) => {
@@ -166,6 +191,18 @@ const DriverApp = () => {
     }
   };
 
+  const handleIntervalChange = (value: string) => {
+    const newInterval = parseInt(value, 10);
+    setUpdateInterval(newInterval);
+    
+    if (isTracking) {
+      // Restart tracking with new interval
+      stopTracking();
+      startTracking();
+      toast.success(`Update interval changed to ${newInterval} seconds`);
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
@@ -218,6 +255,31 @@ const DriverApp = () => {
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">Driver</h3>
             <p className="text-lg">{driverBus.driverName}</p>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Update Interval
+            </h3>
+            <Select 
+              value={updateInterval.toString()} 
+              onValueChange={handleIntervalChange}
+              disabled={isTracking}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select interval" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 seconds</SelectItem>
+                <SelectItem value="30">30 seconds</SelectItem>
+                <SelectItem value="60">1 minute</SelectItem>
+                <SelectItem value="120">2 minutes</SelectItem>
+                <SelectItem value="300">5 minutes</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {isTracking ? `Updating every ${updateInterval} seconds` : "Select how often to update location"}
+            </p>
           </div>
           
           <div className="space-y-2">
