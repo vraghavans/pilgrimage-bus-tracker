@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 type UserRole = 'admin' | 'driver' | null;
 
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
 
       if (session?.user) {
-        // Fetch user role from metadata
+        // Fetch user role from the user_roles table
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
@@ -42,6 +43,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (data && !error) {
           setUserRole(data.role as UserRole);
+        } else {
+          console.error('Error fetching user role:', error);
         }
       }
 
@@ -68,6 +71,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (data && !error) {
           setUserRole(data.role as UserRole);
+          
+          // Redirect based on role
+          if (data.role === 'admin') {
+            navigate('/');
+          } else if (data.role === 'driver') {
+            navigate('/driver');
+          }
+        } else {
+          console.error('Error fetching user role:', error);
+          toast.error('Failed to retrieve user role');
         }
       }
     });
@@ -83,6 +96,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       password,
     });
 
+    if (error) {
+      toast.error(error.message);
+    }
+
     return { error };
   };
 
@@ -94,6 +111,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (error || !data.user) {
+      toast.error(error?.message || 'Failed to sign up');
       return { error };
     }
 
@@ -108,17 +126,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (roleError) {
         console.error('Error setting user role:', roleError);
+        toast.error('Failed to set user role');
         // Sign out if we couldn't set the role
         await supabase.auth.signOut();
         return { error: roleError };
       }
     }
 
+    toast.success('Account created successfully! Please sign in.');
     return { error: null };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    toast.success('Signed out successfully');
   };
 
   const value = {
