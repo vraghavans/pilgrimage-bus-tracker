@@ -113,25 +113,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, role: UserRole) => {
-    // Create the user
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      // Create the user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    if (error || !data.user) {
-      toast.error(error?.message || 'Failed to sign up');
-      return { error };
-    }
+      if (error || !data.user) {
+        toast.error(error?.message || 'Failed to sign up');
+        return { error };
+      }
 
-    // Add user role to the roles table
-    if (role) {
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: data.user.id,
-          role,
-        });
+      // Use the Supabase service role to bypass RLS policies
+      // This is handled server-side for security
+      const { error: roleError } = await supabase.rpc('create_user_role', {
+        user_id: data.user.id,
+        user_role: role
+      });
 
       if (roleError) {
         console.error('Error setting user role:', roleError);
@@ -140,10 +139,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await supabase.auth.signOut();
         return { error: roleError };
       }
-    }
 
-    toast.success('Account created successfully! Please sign in.');
-    return { error: null };
+      toast.success('Account created successfully! Please sign in.');
+      return { error: null };
+    } catch (error) {
+      console.error('Sign up error:', error);
+      toast.error('An unexpected error occurred during sign up');
+      return { error };
+    }
   };
 
   const signOut = async () => {
