@@ -1,102 +1,108 @@
-
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { AuthDebug } from "@/components/AuthDebug";
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'admin' | 'driver'>('driver');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, session } = useAuth();
-  const navigate = useNavigate();
-
-  // If user is already logged in, redirect based on role
-  if (session) {
-    navigate('/');
-    return null;
-  }
+  const { signIn, signUp } = useAuth();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("login");
+  const [role, setRole] = useState<"admin" | "driver">("driver");
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!email || !password) {
+      toast({
+        title: "Missing information",
+        description: "Please provide both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    try {
-      const { error } = await signIn(email, password);
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast.success('Signed in successfully');
-      // The auth context will handle redirection
-    } catch (error: any) {
-      console.error('Error signing in:', error);
-      toast.error(error.message || 'Failed to sign in');
-    } finally {
-      setIsLoading(false);
+    setIsLoading(true);
+    const { error } = await signIn(email, password);
+    setIsLoading(false);
+
+    if (error) {
+      toast({
+        title: "Sign in failed",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!email || !password) {
+      toast({
+        title: "Missing information",
+        description: "Please provide both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    try {
-      const { error } = await signUp(email, password, role);
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast.success('Account created successfully! Check your email to confirm your account.');
-    } catch (error: any) {
-      console.error('Error signing up:', error);
-      toast.error(error.message || 'Failed to create account');
-    } finally {
-      setIsLoading(false);
+    setIsLoading(true);
+    const { error } = await signUp(email, password, role);
+    setIsLoading(false);
+
+    if (error) {
+      toast({
+        title: "Sign up failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Account created",
+        description: "Please sign in with your new credentials.",
+      });
+      setActiveTab("login");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-sage-50 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Pilgrimage Bus Tracker</CardTitle>
-          <CardDescription>Sign in or create an account</CardDescription>
+          <CardDescription>Sign in to access your account</CardDescription>
         </CardHeader>
-        <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="register">Register</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="signin">
+          <TabsContent value="login">
             <form onSubmit={handleSignIn}>
-              <CardContent className="space-y-4 pt-4">
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email-signin">Email</Label>
-                  <Input 
-                    id="email-signin" 
-                    type="email" 
-                    placeholder="your@email.com" 
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="example@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password-signin">Password</Label>
-                  <Input 
-                    id="password-signin" 
-                    type="password" 
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -104,63 +110,76 @@ const Auth = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Signing in...' : 'Sign In'}
+                <Button className="w-full" type="submit" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
               </CardFooter>
             </form>
           </TabsContent>
-          
-          <TabsContent value="signup">
+          <TabsContent value="register">
             <form onSubmit={handleSignUp}>
-              <CardContent className="space-y-4 pt-4">
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email-signup">Email</Label>
-                  <Input 
-                    id="email-signup" 
-                    type="email" 
-                    placeholder="your@email.com" 
+                  <Label htmlFor="register-email">Email</Label>
+                  <Input
+                    id="register-email"
+                    type="email"
+                    placeholder="example@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password-signup">Password</Label>
-                  <Input 
-                    id="password-signup" 
-                    type="password" 
+                  <Label htmlFor="register-password">Password</Label>
+                  <Input
+                    id="register-password"
+                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Password must be at least 6 characters.
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Account Type</Label>
-                  <RadioGroup 
-                    value={role}
-                    onValueChange={(value) => setRole(value as 'admin' | 'driver')}
-                    className="flex flex-col space-y-1"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="driver" id="driver" />
-                      <Label htmlFor="driver">Driver</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="admin" id="admin" />
-                      <Label htmlFor="admin">Admin</Label>
-                    </div>
-                  </RadioGroup>
+                  <Label htmlFor="role">Account Type</Label>
+                  <Tabs value={role} onValueChange={(value) => setRole(value as "admin" | "driver")}>
+                    <TabsList className="grid grid-cols-2 w-full">
+                      <TabsTrigger value="driver">Driver</TabsTrigger>
+                      <TabsTrigger value="admin">Admin</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                <Button className="w-full" type="submit" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
               </CardFooter>
             </form>
           </TabsContent>
         </Tabs>
+        
+        {/* Add the debug component */}
+        <CardFooter className="flex-col items-start">
+          <AuthDebug />
+        </CardFooter>
       </Card>
     </div>
   );

@@ -29,26 +29,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initializeAuth = async () => {
       setIsLoading(true);
       
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+      try {
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
 
-      if (session?.user) {
-        // Fetch user role from the user_roles table
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
+        if (session?.user) {
+          // Fetch user role from the user_roles table
+          const { data, error } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single();
 
-        if (data && !error) {
-          setUserRole(data.role as UserRole);
-        } else {
-          console.error('Error fetching user role:', error);
+          if (data && !error) {
+            setUserRole(data.role as UserRole);
+          } else {
+            console.error('Error fetching user role:', error);
+          }
         }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
     initializeAuth();
@@ -62,25 +66,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserRole(null);
         navigate('/auth');
       } else if (event === 'SIGNED_IN' && session) {
-        // Fetch user role when signed in
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
+        try {
+          // Fetch user role when signed in
+          const { data, error } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single();
 
-        if (data && !error) {
-          setUserRole(data.role as UserRole);
-          
-          // Redirect based on role
-          if (data.role === 'admin') {
-            navigate('/');
-          } else if (data.role === 'driver') {
-            navigate('/driver');
+          if (data && !error) {
+            setUserRole(data.role as UserRole);
+            
+            // Redirect based on role
+            if (data.role === 'admin') {
+              navigate('/');
+            } else if (data.role === 'driver') {
+              navigate('/driver');
+            }
+          } else {
+            console.error('Error fetching user role:', error);
+            toast.error('Failed to retrieve user role');
           }
-        } else {
-          console.error('Error fetching user role:', error);
-          toast.error('Failed to retrieve user role');
+        } catch (error) {
+          console.error('Error during auth state change:', error);
+          toast.error('Authentication error occurred');
         }
       }
     });
