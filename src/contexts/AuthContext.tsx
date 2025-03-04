@@ -129,11 +129,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       console.log('User created successfully, user ID:', data.user.id);
 
-      // Use RPC to call the create_user_role function which bypasses RLS
-      const { error: roleError } = await supabase.rpc('create_user_role', {
+      // Check if role is null or undefined before proceeding
+      if (!role) {
+        console.error('Role is null or undefined');
+        toast.error('Role selection is required');
+        await supabase.auth.signOut();
+        return { error: new Error('Role selection is required') };
+      }
+
+      // Ensure we're using the correct parameter names as expected by the RPC function
+      const { error: roleError, data: roleData } = await supabase.rpc('create_user_role', {
         user_id: data.user.id,
         user_role: role
       });
+
+      console.log('RPC response:', roleData);
 
       if (roleError) {
         console.error('Error setting user role:', roleError);
