@@ -62,10 +62,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('Auth state changed:', event);
       setSession(session);
 
-      // Handle email verification completion
-      if (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED' || 
-          event === 'EMAIL_CHANGE' || event === 'SIGNED_OUT') {
-        // Redirect to auth page for all these events
+      // Handle auth events - only using valid Supabase auth event types
+      if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        // Redirect to auth page for these events
         navigate('/auth');
       } else if (event === 'SIGNED_IN' && session) {
         try {
