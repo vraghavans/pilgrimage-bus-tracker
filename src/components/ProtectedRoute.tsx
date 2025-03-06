@@ -1,13 +1,15 @@
 
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface ProtectedRouteProps {
+  children: ReactNode;
   requiredRole?: 'admin' | 'driver' | null;
 }
 
-export const ProtectedRoute = ({ requiredRole }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { session, isLoading, userRole } = useAuth();
 
   if (isLoading) {
@@ -36,5 +38,5 @@ export const ProtectedRoute = ({ requiredRole }: ProtectedRouteProps) => {
   }
 
   // User is authenticated and has the correct role
-  return <Outlet />;
+  return <>{children}</>;
 };
