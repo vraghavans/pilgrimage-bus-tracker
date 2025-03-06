@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
@@ -25,13 +26,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   useEffect(() => {
+    console.log('AuthProvider initialized');
+    
     // Check for existing session
     const initializeAuth = async () => {
       setIsLoading(true);
       
       try {
+        console.log('Checking for existing session...');
         // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Error getting session:', sessionError);
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log('Session found:', session ? 'Yes' : 'No');
         setSession(session);
 
         if (session?.user) {
@@ -43,6 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .single();
 
           if (data && !error) {
+            console.log('User role found:', data.role);
             setUserRole(data.role as UserRole);
           } else {
             console.error('Error fetching user role:', error);
@@ -63,11 +76,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
 
       // Handle auth events - only using valid Supabase auth event types
-      if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-        // Redirect to auth page for these events
+      if (event === 'SIGNED_OUT') {
+        console.log('User signed out, redirecting to auth page');
+        setUserRole(null);
+        navigate('/auth');
+      } else if (event === 'USER_UPDATED') {
+        console.log('User updated, redirecting to auth page');
         navigate('/auth');
       } else if (event === 'SIGNED_IN' && session) {
         try {
+          console.log('User signed in, fetching role');
           // Fetch user role when signed in
           const { data, error } = await supabase
             .from('user_roles')
@@ -80,8 +98,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             // Redirect based on role
             if (data.role === 'admin') {
+              console.log('Admin user, redirecting to admin dashboard');
               navigate('/');
             } else if (data.role === 'driver') {
+              console.log('Driver user, redirecting to driver app');
               navigate('/driver');
             }
           } else {

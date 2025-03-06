@@ -13,6 +13,8 @@ console.log('Supabase client initializing with Anon Key:', supabaseAnonKey ? 'Ke
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
     // Debug flag to help with troubleshooting
     debug: true
   }
