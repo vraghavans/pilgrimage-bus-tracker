@@ -1,8 +1,7 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 type UserRole = 'admin' | 'driver' | null;
@@ -23,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Check for existing session
@@ -62,8 +62,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('Auth state changed:', event);
       setSession(session);
 
-      if (event === 'SIGNED_OUT') {
-        setUserRole(null);
+      // Handle email verification completion
+      if (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED' || 
+          event === 'EMAIL_CHANGE' || event === 'SIGNED_OUT') {
+        // Redirect to auth page for all these events
         navigate('/auth');
       } else if (event === 'SIGNED_IN' && session) {
         try {
@@ -97,7 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({

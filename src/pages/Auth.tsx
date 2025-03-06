@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { AuthDebug } from "@/components/AuthDebug";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -175,11 +175,6 @@ const Auth = () => {
             </form>
           </TabsContent>
         </Tabs>
-        
-        {/* Add the debug component */}
-        <CardFooter className="flex-col items-start">
-          <AuthDebug />
-        </CardFooter>
       </Card>
     </div>
   );
