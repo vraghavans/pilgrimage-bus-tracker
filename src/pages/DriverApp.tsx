@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bus } from "@/types/bus";
@@ -9,12 +9,13 @@ import { useLocationTracking } from "@/hooks/useLocationTracking";
 import DriverInfo from "@/components/driver/DriverInfo";
 import LocationTracker from "@/components/driver/LocationTracker";
 import ErrorDisplay from "@/components/driver/ErrorDisplay";
+import { sendHeartbeat } from "@/services/locationTracking";
 
 const DriverApp = () => {
   const { signOut, session } = useAuth();
   const [driverBus] = useState<Bus>({
     id: session?.user?.id || "1",
-    name: `Bus ${session?.user?.id?.substring(0, 4) || "101"}`,
+    name: `Bus ${session?.user?.email?.split('@')[0] || "101"}`,
     driverName: session?.user?.email?.split('@')[0] || "John Doe",
     status: "active",
     location: {
@@ -36,6 +37,25 @@ const DriverApp = () => {
     handleIntervalChange
   } = useLocationTracking(driverBus);
 
+  // Send heartbeat every 5 minutes even if not actively tracking
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const heartbeatInterval = setInterval(() => {
+      sendHeartbeat(session.user.id);
+    }, 5 * 60 * 1000); // Every 5 minutes
+
+    return () => clearInterval(heartbeatInterval);
+  }, [session]);
+
+  const handleSignOut = async () => {
+    // Stop tracking before signing out
+    if (isTracking) {
+      await stopTracking();
+    }
+    await signOut();
+  };
+
   if (error) {
     return <ErrorDisplay error={error} />;
   }
@@ -44,7 +64,7 @@ const DriverApp = () => {
     <div className="min-h-screen bg-background p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-bold">Driver App</h1>
-        <Button variant="outline" size="sm" onClick={signOut}>
+        <Button variant="outline" size="sm" onClick={handleSignOut}>
           <LogOut className="h-4 w-4 mr-2" />
           Sign Out
         </Button>

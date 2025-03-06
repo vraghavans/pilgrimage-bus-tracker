@@ -9,11 +9,18 @@ import Map from "@/components/Map";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [selectedBus, setSelectedBus] = useState<Bus | null>(null);
   const [buses, setBuses] = useState<Bus[]>([]);
-  const { signOut } = useAuth();
+  const { signOut, session } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   // Fetch initial bus locations
   useEffect(() => {
@@ -29,14 +36,14 @@ const Index = () => {
         // Transform the data to match the Bus type
         const transformedBuses: Bus[] = data.map(location => ({
           id: location.bus_id,
-          name: `Bus ${location.bus_id}`,
-          driverName: "Active Driver", // You might want to fetch this from a drivers table
+          name: location.bus_name || `Bus ${location.bus_id.substring(0, 4)}`,
+          driverName: location.bus_name?.split('@')[0] || "Active Driver",
           status: location.status as "active" | "stopped" | "offline",
           location: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
-          lastUpdate: location.updated_at,
+          lastUpdate: location.last_heartbeat || location.updated_at,
         }));
 
         setBuses(transformedBuses);
@@ -74,7 +81,7 @@ const Index = () => {
     <div className="flex flex-col min-h-screen bg-sage-50">
       <header className="bg-white p-4 shadow-sm flex justify-between items-center">
         <h1 className="text-xl font-bold">Pilgrimage Bus Tracker - Admin</h1>
-        <Button variant="outline" size="sm" onClick={signOut}>
+        <Button variant="outline" size="sm" onClick={handleSignOut}>
           <LogOut className="h-4 w-4 mr-2" />
           Sign Out
         </Button>

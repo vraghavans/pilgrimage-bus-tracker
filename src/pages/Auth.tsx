@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -136,6 +137,15 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
+                  {role === "driver" && (
+                    <Alert className="mt-2 bg-amber-50 text-amber-800 border-amber-200">
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      <AlertDescription>
+                        For driver accounts, use the bus name/number as your email username 
+                        (e.g., <strong>bus123@example.com</strong>)
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-password">Password</Label>
