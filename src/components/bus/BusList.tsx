@@ -3,7 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bus } from "@/types/bus";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { fetchTrackedBuses } from "@/services/locationTracking";
+import { fetchTrackedBuses } from "@/services/busTracking";
 import { TrackedBusList } from "./TrackedBusList";
 import { UntrackedBusList } from "./UntrackeedBusList";
 import { BusListSkeleton } from "./BusListSkeleton";

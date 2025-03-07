@@ -1,8 +1,11 @@
-
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Bus } from "@/types/bus";
-import { checkLocationPermission, updateLocationInDatabase, getCurrentPosition } from "@/services/locationTracking";
+import { 
+  checkLocationPermission, 
+  updateLocationInDatabase, 
+  getCurrentPosition 
+} from "@/services/locationTracking";
 
 export const useLocationTracking = (driverBus: Bus) => {
   const [isTracking, setIsTracking] = useState(false);

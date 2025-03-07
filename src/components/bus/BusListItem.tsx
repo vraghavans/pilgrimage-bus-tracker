@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { updateBusTrackingStatus, associateBusWithAdmin } from "@/services/locationTracking";
+import { updateBusTrackingStatus, associateBusWithAdmin } from "@/services/busTracking";
 import { toast } from "sonner";
 
 interface BusListItemProps {

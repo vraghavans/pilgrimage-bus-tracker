@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { useLocationTracking } from "@/hooks/useLocationTracking";
 import DriverInfo from "@/components/driver/DriverInfo";
 import LocationTracker from "@/components/driver/LocationTracker";
 import ErrorDisplay from "@/components/driver/ErrorDisplay";
-import { sendHeartbeat } from "@/services/locationTracking";
+import { sendHeartbeat } from "@/services/locationUpdates";
 
 const DriverApp = () => {
   const { signOut, session } = useAuth();
@@ -37,7 +36,6 @@ const DriverApp = () => {
     handleIntervalChange
   } = useLocationTracking(driverBus);
 
-  // Send heartbeat every 5 minutes even if not actively tracking
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -49,7 +47,6 @@ const DriverApp = () => {
   }, [session]);
 
   const handleSignOut = async () => {
-    // Stop tracking before signing out
     if (isTracking) {
       await stopTracking();
     }
