@@ -2,7 +2,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bus } from "@/types/bus";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Clock, AlertTriangle } from "lucide-react";
 import { fetchTrackedBuses, updateBusTrackingStatus, associateBusWithAdmin } from "@/services/locationTracking";

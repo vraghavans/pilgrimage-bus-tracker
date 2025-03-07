@@ -8,7 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import DriverApp from "./pages/DriverApp";
 import Auth from "./pages/Auth";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/auth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useState, useEffect } from "react";
 

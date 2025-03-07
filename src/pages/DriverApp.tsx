@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bus } from "@/types/bus";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { LogOut } from "lucide-react";
 import { useLocationTracking } from "@/hooks/useLocationTracking";
 import DriverInfo from "@/components/driver/DriverInfo";
