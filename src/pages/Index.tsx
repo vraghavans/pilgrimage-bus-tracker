@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { BusList } from "@/components/BusList";
+import { BusList } from "@/components/bus/BusList";
 import { BusDetails } from "@/components/BusDetails";
 import { Bus } from "@/types/bus";
 import { supabase } from "@/integrations/supabase/client";
