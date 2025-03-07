@@ -9,12 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_bus_relationships: {
+        Row: {
+          admin_id: string
+          bus_id: string
+          created_at: string
+          id: string
+          is_tracking: boolean
+        }
+        Insert: {
+          admin_id: string
+          bus_id: string
+          created_at?: string
+          id?: string
+          is_tracking?: boolean
+        }
+        Update: {
+          admin_id?: string
+          bus_id?: string
+          created_at?: string
+          id?: string
+          is_tracking?: boolean
+        }
+        Relationships: []
+      }
+      bus_location_history: {
+        Row: {
+          bus_id: string
+          id: string
+          latitude: number
+          longitude: number
+          recorded_at: string
+          status: string
+        }
+        Insert: {
+          bus_id: string
+          id?: string
+          latitude: number
+          longitude: number
+          recorded_at?: string
+          status?: string
+        }
+        Update: {
+          bus_id?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          recorded_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       bus_locations: {
         Row: {
           bus_id: string
+          bus_name: string | null
           created_at: string
           driver_id: string | null
           id: string
+          last_heartbeat: string
           latitude: number
           longitude: number
           status: string
@@ -22,9 +75,11 @@ export type Database = {
         }
         Insert: {
           bus_id: string
+          bus_name?: string | null
           created_at?: string
           driver_id?: string | null
           id?: string
+          last_heartbeat?: string
           latitude: number
           longitude: number
           status?: string
@@ -32,9 +87,11 @@ export type Database = {
         }
         Update: {
           bus_id?: string
+          bus_name?: string | null
           created_at?: string
           driver_id?: string | null
           id?: string
+          last_heartbeat?: string
           latitude?: number
           longitude?: number
           status?: string
@@ -80,6 +137,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      purge_inactive_buses: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_bus_location: {
         Args: {

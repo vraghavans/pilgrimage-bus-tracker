@@ -163,7 +163,7 @@ export const updateBusTrackingStatus = async (
   try {
     const { error } = await supabase
       .from('admin_bus_relationships')
-      .update({ is_tracking })
+      .update({ is_tracking: isTracking })
       .match({ admin_id: adminId, bus_id: busId });
     
     if (error) {

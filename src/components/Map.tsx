@@ -129,9 +129,9 @@ const Map = ({ buses, selectedBus, onBusSelect }: MapProps) => {
         if (history.length > 0 && map.current && historySourceRef.current) {
           // Update the GeoJSON source with new history data
           const historyFeatures = history.map(point => ({
-            type: 'Feature',
+            type: 'Feature' as const,
             geometry: {
-              type: 'Point',
+              type: 'Point' as const,
               coordinates: [point.longitude, point.latitude]
             },
             properties: {
@@ -147,9 +147,9 @@ const Map = ({ buses, selectedBus, onBusSelect }: MapProps) => {
               features: [
                 // Line string for the path
                 {
-                  type: 'Feature',
+                  type: 'Feature' as const,
                   geometry: {
-                    type: 'LineString',
+                    type: 'LineString' as const,
                     coordinates: history.map(point => [point.longitude, point.latitude])
                   },
                   properties: {}
