@@ -1,7 +1,7 @@
 
 import { Bus } from "@/types/bus";
 import { Button } from "@/components/ui/button";
-import { EyeOff } from "lucide-react";
+import { Eye } from "lucide-react";
 
 interface UntrackedBusListProps {
   buses: Bus[];
@@ -31,8 +31,8 @@ export const UntrackedBusList = ({
             size="sm"
             onClick={() => onTrackBus(bus)}
           >
-            <EyeOff className="w-4 h-4 mr-1" />
-            Untrack
+            <Eye className="w-4 h-4 mr-1" />
+            Track
           </Button>
         </div>
       ))}

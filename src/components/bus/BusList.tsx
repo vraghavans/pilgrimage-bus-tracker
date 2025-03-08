@@ -65,6 +65,23 @@ export const BusList = ({ buses, onSelectBus, selectedBusId }: BusListProps) => 
       toast.error("Failed to untrack bus");
     }
   };
+  
+  const handleTrackBus = async (bus: Bus) => {
+    if (!session?.user) return;
+    
+    try {
+      const adminId = session.user.id;
+      const success = await toggleBusTracking(bus.id, adminId, true);
+      
+      if (success) {
+        handleTrackingToggle(bus.id, true);
+        toast.success(`Now tracking ${bus.name}`);
+      }
+    } catch (error) {
+      console.error("Error tracking bus:", error);
+      toast.error("Failed to track bus");
+    }
+  };
 
   return (
     <ScrollArea className="h-[calc(100vh-4rem)] w-80 border-r border-border bg-card/50 backdrop-blur-sm">
@@ -87,7 +104,7 @@ export const BusList = ({ buses, onSelectBus, selectedBusId }: BusListProps) => 
             <UntrackedBusList 
               buses={buses}
               trackedBusIds={trackedBuses}
-              onTrackBus={handleUntrackBus}
+              onTrackBus={handleTrackBus}
             />
           </>
         )}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { useLocationTracking } from "@/hooks/useLocationTracking";
 import DriverInfo from "@/components/driver/DriverInfo";
 import LocationTracker from "@/components/driver/LocationTracker";
 import ErrorDisplay from "@/components/driver/ErrorDisplay";
+import AdminAccessManager from "@/components/driver/AdminAccessManager";
 import { sendHeartbeat } from "@/services/locationUpdates";
 
 const DriverApp = () => {
@@ -78,6 +80,9 @@ const DriverApp = () => {
           onStopTracking={stopTracking}
           onIntervalChange={handleIntervalChange}
         />
+        {session?.user?.id && (
+          <AdminAccessManager busId={session.user.id} />
+        )}
       </Card>
     </div>
   );

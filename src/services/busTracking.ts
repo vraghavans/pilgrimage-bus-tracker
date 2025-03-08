@@ -136,3 +136,85 @@ export const updateBusTrackingStatus = async (
     return false;
   }
 };
+
+// New function to add an admin to a bus by email
+export const addAdminToBus = async (busId: string, adminEmail: string): Promise<boolean> => {
+  try {
+    // First, find the admin user ID from their email
+    const { data: adminData, error: adminError } = await supabase
+      .from('auth.users')
+      .select('id')
+      .eq('email', adminEmail)
+      .maybeSingle();
+    
+    if (adminError || !adminData) {
+      console.error('Error finding admin user:', adminError);
+      toast.error('Admin with this email not found');
+      return false;
+    }
+    
+    // Now create the relationship
+    const { error: relationshipError } = await supabase
+      .from('admin_bus_relationships')
+      .upsert({
+        admin_id: adminData.id,
+        bus_id: busId,
+        is_tracking: true
+      });
+    
+    if (relationshipError) {
+      console.error('Error adding admin to bus:', relationshipError);
+      toast.error('Failed to add admin');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error adding admin to bus:', error);
+    toast.error('Failed to add admin');
+    return false;
+  }
+};
+
+// Remove an admin from a bus
+export const removeAdminFromBus = async (busId: string, adminId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('admin_bus_relationships')
+      .delete()
+      .match({ bus_id: busId, admin_id: adminId });
+    
+    if (error) {
+      console.error('Error removing admin from bus:', error);
+      toast.error('Failed to remove admin');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error removing admin from bus:', error);
+    toast.error('Failed to remove admin');
+    return false;
+  }
+};
+
+// Get all admins who have access to a specific bus
+export const getAdminsForBus = async (busId: string): Promise<{email: string; id: string}[]> => {
+  try {
+    // This query needs to be modified to fetch admin emails from auth.users
+    // For now, we'll return a mock response
+    const { data, error } = await supabase.rpc('get_admins_for_bus', { 
+      bus_id: busId 
+    });
+    
+    if (error) {
+      console.error('Error getting admins for bus:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error getting admins for bus:', error);
+    return [];
+  }
+};
