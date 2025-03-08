@@ -52,35 +52,41 @@ export const getBusTrackingStatus = async (
       return false;
     }
     
-    return data?.is_tracking ?? false; // Use the snake_case field name to match the database column
+    // If no relationship exists, the bus is tracked by default
+    if (!data) return true;
+    
+    // Return the opposite of is_tracking since we're tracking by default
+    // and the relationship entry indicates explicit untracking
+    return !data.is_tracking;
   } catch (error) {
     console.error('Error getting bus tracking status:', error);
-    return false;
+    return true; // Default to tracked in case of error
   }
 };
 
-// Fetch tracked buses for an admin
+// Fetch explicitly untracked buses for an admin
 export const fetchTrackedBuses = async (adminId: string): Promise<string[]> => {
   try {
     const { data, error } = await supabase
       .from('admin_bus_relationships')
       .select('bus_id')
       .eq('admin_id', adminId)
-      .eq('is_tracking', true);
+      .eq('is_tracking', false);
     
     if (error) {
       throw error;
     }
     
+    // Return list of explicitly untracked buses
     return data.map(item => item.bus_id) || [];
   } catch (error) {
-    console.error('Error fetching tracked buses:', error);
-    toast.error('Failed to fetch tracked buses');
+    console.error('Error fetching untracked buses:', error);
+    toast.error('Failed to fetch untracked buses');
     return [];
   }
 };
 
-// Associate a bus with an admin (adds a bus to tracking)
+// Associate a bus with an admin (explicit tracking)
 export const associateBusWithAdmin = async (adminId: string, busId: string): Promise<boolean> => {
   try {
     const { error } = await supabase

@@ -3,10 +3,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bus } from "@/types/bus";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { fetchTrackedBuses } from "@/services/busTracking";
+import { fetchTrackedBuses, toggleBusTracking } from "@/services/busTracking";
 import { TrackedBusList } from "./TrackedBusList";
-import { UntrackedBusList } from "./UntrackeedBusList";
+import { UntrackedBusList } from "./UntrackedBusList";
 import { BusListSkeleton } from "./BusListSkeleton";
+import { toast } from "sonner";
 
 interface BusListProps {
   buses: Bus[];
@@ -28,7 +29,13 @@ export const BusList = ({ buses, onSelectBus, selectedBusId }: BusListProps) => 
   const loadTrackedBuses = async () => {
     if (session?.user) {
       setLoading(true);
-      const tracked = await fetchTrackedBuses(session.user.id);
+      // By default, all buses are tracked unless explicitly untracked
+      const explicityUntracked = await fetchTrackedBuses(session.user.id);
+      
+      // Get all bus IDs except those explicitly untracked
+      const allBusIds = buses.map(bus => bus.id);
+      const tracked = allBusIds.filter(id => !explicityUntracked.includes(id));
+      
       setTrackedBuses(tracked);
       setLoading(false);
     }
@@ -42,11 +49,21 @@ export const BusList = ({ buses, onSelectBus, selectedBusId }: BusListProps) => 
     }
   };
 
-  const handleTrackBus = async (bus: Bus) => {
+  const handleUntrackBus = async (bus: Bus) => {
     if (!session?.user) return;
     
-    const adminId = session.user.id;
-    handleTrackingToggle(bus.id, true);
+    try {
+      const adminId = session.user.id;
+      const success = await toggleBusTracking(bus.id, adminId, false);
+      
+      if (success) {
+        handleTrackingToggle(bus.id, false);
+        toast.success(`Stopped tracking ${bus.name}`);
+      }
+    } catch (error) {
+      console.error("Error untracking bus:", error);
+      toast.error("Failed to untrack bus");
+    }
   };
 
   return (
@@ -70,7 +87,7 @@ export const BusList = ({ buses, onSelectBus, selectedBusId }: BusListProps) => 
             <UntrackedBusList 
               buses={buses}
               trackedBusIds={trackedBuses}
-              onTrackBus={handleTrackBus}
+              onTrackBus={handleUntrackBus}
             />
           </>
         )}

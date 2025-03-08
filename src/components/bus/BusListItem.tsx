@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { updateBusTrackingStatus, associateBusWithAdmin } from "@/services/busTracking";
+import { toggleBusTracking } from "@/services/busTracking";
 import { toast } from "sonner";
 
 interface BusListItemProps {
@@ -37,28 +37,17 @@ export const BusListItem = ({
 
   const busInactive = isInactive(bus.lastUpdate);
 
-  const toggleBusTracking = async () => {
+  const toggleBusTrackingStatus = async () => {
     if (isToggling) return;
     
     setIsToggling(true);
     try {
-      let success;
+      // Toggle tracking (false means untrack since buses are tracked by default)
+      const success = await toggleBusTracking(bus.id, adminId, !isTracked);
       
-      if (isTracked) {
-        // Remove from tracking
-        success = await updateBusTrackingStatus(adminId, bus.id, false);
-        if (success) {
-          onTrackingToggle(bus.id, false);
-          toast.success(`Stopped tracking ${bus.name}`);
-        }
-      } else {
-        // Add to tracking
-        success = await associateBusWithAdmin(adminId, bus.id);
-        
-        if (success) {
-          onTrackingToggle(bus.id, true);
-          toast.success(`Now tracking ${bus.name}`);
-        }
+      if (success) {
+        onTrackingToggle(bus.id, !isTracked);
+        toast.success(`${isTracked ? 'Stopped tracking' : 'Now tracking'} ${bus.name}`);
       }
     } catch (error) {
       console.error("Error toggling bus tracking:", error);
@@ -110,7 +99,7 @@ export const BusListItem = ({
           variant="outline"
           size="sm"
           className="flex-1 ml-1"
-          onClick={toggleBusTracking}
+          onClick={toggleBusTrackingStatus}
           disabled={isToggling}
         >
           {isTracked ? (
