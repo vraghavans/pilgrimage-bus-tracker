@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -138,19 +137,22 @@ export const updateBusTrackingStatus = async (
 };
 
 // New function to add an admin to a bus by email
-export const addAdminToBus = async (busId: string, adminEmail: string): Promise<boolean> => {
+export const addAdminToBus = async (busId: string, adminEmail: string): Promise<{success: boolean; error?: string}> => {
   try {
     // First, find the admin user ID from their email
     const { data: adminData, error: adminError } = await supabase
-      .from('auth.users')
+      .from('profiles')
       .select('id')
       .eq('email', adminEmail)
       .maybeSingle();
     
-    if (adminError || !adminData) {
+    if (adminError) {
       console.error('Error finding admin user:', adminError);
-      toast.error('Admin with this email not found');
-      return false;
+      return { success: false, error: 'database_error' };
+    }
+    
+    if (!adminData) {
+      return { success: false, error: 'admin_not_found' };
     }
     
     // Now create the relationship
@@ -164,15 +166,13 @@ export const addAdminToBus = async (busId: string, adminEmail: string): Promise<
     
     if (relationshipError) {
       console.error('Error adding admin to bus:', relationshipError);
-      toast.error('Failed to add admin');
-      return false;
+      return { success: false, error: 'relationship_error' };
     }
     
-    return true;
+    return { success: true };
   } catch (error) {
     console.error('Error adding admin to bus:', error);
-    toast.error('Failed to add admin');
-    return false;
+    return { success: false, error: 'unexpected_error' };
   }
 };
 

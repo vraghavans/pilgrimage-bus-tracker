@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { addAdminToBus, removeAdminFromBus, getAdminsForBus } from "@/services/busTracking";
 import { useAuth } from "@/contexts/auth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AdminAccessManagerProps {
   busId: string;
@@ -15,6 +16,7 @@ const AdminAccessManager: React.FC<AdminAccessManagerProps> = ({ busId }) => {
   const [adminEmail, setAdminEmail] = useState("");
   const [authorizedAdmins, setAuthorizedAdmins] = useState<{email: string; id: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { session } = useAuth();
 
   useEffect(() => {
@@ -28,6 +30,7 @@ const AdminAccessManager: React.FC<AdminAccessManagerProps> = ({ busId }) => {
     
     try {
       setIsLoading(true);
+      setError(null);
       const admins = await getAdminsForBus(busId);
       setAuthorizedAdmins(admins);
     } catch (error) {
@@ -45,15 +48,23 @@ const AdminAccessManager: React.FC<AdminAccessManagerProps> = ({ busId }) => {
 
     try {
       setIsLoading(true);
-      const success = await addAdminToBus(busId, adminEmail.trim());
+      setError(null);
+      const result = await addAdminToBus(busId, adminEmail.trim());
       
-      if (success) {
+      if (result.success) {
         toast.success(`Admin ${adminEmail} added successfully`);
         setAdminEmail("");
         await loadAuthorizedAdmins();
+      } else if (result.error === 'admin_not_found') {
+        setError(`No user with email "${adminEmail}" exists. They need to register first.`);
+        toast.error("Admin not found");
+      } else {
+        setError("Failed to add admin. Please try again.");
+        toast.error("Failed to add admin");
       }
     } catch (error) {
       console.error("Error adding admin:", error);
+      setError("An unexpected error occurred. Please try again.");
       toast.error("Failed to add admin");
     } finally {
       setIsLoading(false);
@@ -63,6 +74,7 @@ const AdminAccessManager: React.FC<AdminAccessManagerProps> = ({ busId }) => {
   const handleRemoveAdmin = async (adminId: string) => {
     try {
       setIsLoading(true);
+      setError(null);
       const success = await removeAdminFromBus(busId, adminId);
       
       if (success) {
@@ -93,6 +105,13 @@ const AdminAccessManager: React.FC<AdminAccessManagerProps> = ({ busId }) => {
           Add Admin
         </Button>
       </form>
+      
+      {error && (
+        <Alert variant="destructive" className="mt-2">
+          <AlertCircle className="h-4 w-4 mr-2" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <div className="space-y-2">
         <h4 className="text-xs text-muted-foreground">Authorized Admins</h4>
