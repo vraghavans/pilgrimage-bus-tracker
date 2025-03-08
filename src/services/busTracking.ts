@@ -13,7 +13,7 @@ export const toggleBusTracking = async (
       .upsert({
         bus_id: busId,
         admin_id: adminId,
-        is_tracking: isTracking // Use the snake_case field name to match the database column
+        is_tracking: isTracking
       }, {
         onConflict: 'bus_id,admin_id'
       });
@@ -41,7 +41,7 @@ export const getBusTrackingStatus = async (
   try {
     const { data, error } = await supabase
       .from('admin_bus_relationships')
-      .select('is_tracking') // Use the snake_case field name to match the database column
+      .select('is_tracking')
       .eq('bus_id', busId)
       .eq('admin_id', adminId)
       .maybeSingle();
@@ -51,15 +51,12 @@ export const getBusTrackingStatus = async (
       return false;
     }
     
-    // If no relationship exists, the bus is tracked by default
     if (!data) return true;
     
-    // Return the opposite of is_tracking since we're tracking by default
-    // and the relationship entry indicates explicit untracking
     return !data.is_tracking;
   } catch (error) {
     console.error('Error getting bus tracking status:', error);
-    return true; // Default to tracked in case of error
+    return true;
   }
 };
 
@@ -76,7 +73,6 @@ export const fetchTrackedBuses = async (adminId: string): Promise<string[]> => {
       throw error;
     }
     
-    // Return list of explicitly untracked buses
     return data.map(item => item.bus_id) || [];
   } catch (error) {
     console.error('Error fetching untracked buses:', error);
@@ -136,10 +132,9 @@ export const updateBusTrackingStatus = async (
   }
 };
 
-// New function to add an admin to a bus by email
+// Add an admin to a bus by email
 export const addAdminToBus = async (busId: string, adminEmail: string): Promise<{success: boolean; error?: string}> => {
   try {
-    // First, find the admin user ID from their email
     const { data: adminData, error: adminError } = await supabase
       .from('profiles')
       .select('id')
@@ -155,7 +150,6 @@ export const addAdminToBus = async (busId: string, adminEmail: string): Promise<
       return { success: false, error: 'admin_not_found' };
     }
     
-    // Now create the relationship
     const { error: relationshipError } = await supabase
       .from('admin_bus_relationships')
       .upsert({
@@ -201,8 +195,6 @@ export const removeAdminFromBus = async (busId: string, adminId: string): Promis
 // Get all admins who have access to a specific bus
 export const getAdminsForBus = async (busId: string): Promise<{email: string; id: string}[]> => {
   try {
-    // This query needs to be modified to fetch admin emails from auth.users
-    // For now, we'll return a mock response
     const { data, error } = await supabase.rpc('get_admins_for_bus', { 
       bus_id: busId 
     });
