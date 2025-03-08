@@ -99,6 +99,24 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -131,6 +149,15 @@ export type Database = {
           user_role: string
         }
         Returns: undefined
+      }
+      get_admins_for_bus: {
+        Args: {
+          bus_id: string
+        }
+        Returns: {
+          id: string
+          email: string
+        }[]
       }
       has_role: {
         Args: {
